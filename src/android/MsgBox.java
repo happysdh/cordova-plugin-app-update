@@ -8,7 +8,12 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.TextView;
+
+import com.xunao.udsa.R;
+
 import org.apache.cordova.LOG;
 
 import java.util.HashMap;
@@ -19,6 +24,8 @@ import java.util.Map;
  */
 public class MsgBox {
     public static final String TAG = "MsgBox";
+    public static final int CancelButtonIndex = 1;
+    public static final int UpdateButtonIndex = 2;
     private Context mContext;
     private MsgHelper msgHelper;
 
@@ -43,7 +50,8 @@ public class MsgBox {
             // 构造对话框
             AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
             builder.setTitle(msgHelper.getString(MsgHelper.UPDATE_TITLE));
-            builder.setMessage(msgHelper.getString(MsgHelper.UPDATE_MESSAGE));
+            builder.setMessage("1.更新啦JsonParser是定义公共API用于读取的Json内容的基类。使用JsonFactory实例的工厂方法创建实例\n2.呵呵呵\n3.嘿嘿嘿\n4.啦啦啦\n5.滴滴滴");
+//            builder.setMessage(msgHelper.getString(MsgHelper.UPDATE_MESSAGE));
             // 更新
             builder.setPositiveButton(msgHelper.getString(MsgHelper.UPDATE_UPDATE_BTN), onClickListener);
             noticeDialog = builder.create();
@@ -52,6 +60,40 @@ public class MsgBox {
         if (!noticeDialog.isShowing()) noticeDialog.show();
 
         noticeDialog.setCanceledOnTouchOutside(false);// 设置点击屏幕Dialog不消失
+        return noticeDialog;
+    }
+
+    public Dialog showDialog(VersionInfo versionInfo,Version version,final OnClickListener onClickListener) {
+        if(noticeDialog == null) {
+            View versionView = View.inflate(mContext, R.layout.appupdate_dialog, null);
+            AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+            TextView txtTitle = (TextView) versionView.findViewById(R.id.title);
+            TextView txtContent = (TextView) versionView.findViewById(R.id.content);
+            txtTitle.setText("检测到新版本V " + versionInfo.getCurrentVersion());
+            txtContent.setText(versionInfo.getContent());
+            Button btnCancel = (Button) versionView.findViewById(R.id.btn_cancel);
+            Button btnUpdate = (Button) versionView.findViewById(R.id.btn_update);
+            builder.setCancelable(false);
+            builder.setView(versionView);
+            btnCancel.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    onClickListener.onClick(noticeDialog,CancelButtonIndex);
+                }
+            });
+            btnUpdate.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    onClickListener.onClick(noticeDialog,UpdateButtonIndex);
+                }
+            });
+            //强制更新
+            if (version.getLocal() < version.getLowest()) {
+                btnCancel.setVisibility(View.GONE);
+            }
+            noticeDialog = builder.create();
+        }
+        if (!noticeDialog.isShowing()) noticeDialog.show();
         return noticeDialog;
     }
 

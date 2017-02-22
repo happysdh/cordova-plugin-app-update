@@ -12,7 +12,6 @@ import android.view.View.OnClickListener;
 import android.widget.ProgressBar;
 
 import java.io.File;
-import java.util.HashMap;
 
 /**
  * Created by LuoWen on 2015/12/14.
@@ -27,18 +26,21 @@ public class DownloadHandler extends Handler {
     private int progress;
     /* 下载保存路径 */
     private String mSavePath;
-    /* 保存解析的XML信息 */
-    private HashMap<String, String> mHashMap;
+//    /* 保存解析的XML信息 */
+//    private HashMap<String, String> mHashMap;
+    /* 保存解析的JSON信息 */
+    private VersionInfo versionInfo;
     private MsgHelper msgHelper;
     private AlertDialog mDownloadDialog;
 
-    public DownloadHandler(Context mContext, ProgressBar mProgress, AlertDialog mDownloadDialog, String mSavePath, HashMap<String, String> mHashMap) {
+    public DownloadHandler(Context mContext, ProgressBar mProgress, AlertDialog mDownloadDialog, String mSavePath, VersionInfo versionInfo) {
         this.msgHelper = new MsgHelper(mContext.getPackageName(), mContext.getResources());
         this.mDownloadDialog = mDownloadDialog;
         this.mContext = mContext;
         this.mProgress = mProgress;
         this.mSavePath = mSavePath;
-        this.mHashMap = mHashMap;
+//        this.mHashMap = mHashMap;
+        this.versionInfo = versionInfo;
     }
 
     public void handleMessage(Message msg) {
@@ -83,7 +85,7 @@ public class DownloadHandler extends Handler {
      * 安装APK文件
      */
     private void installApk() {
-        File apkFile = new File(mSavePath, mHashMap.get("name"));
+        File apkFile = new File(mSavePath, versionInfo.getName());
         if (!apkFile.exists()) {
             return;
         }

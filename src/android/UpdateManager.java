@@ -105,7 +105,8 @@ public class UpdateManager {
                     callbackContext.error(Utils.makeJSON(Constants.VERSION_COMPARE_FAIL, "version compare fail"));
                     break;
                 case Constants.VERSION_RESOLVE_FAIL:
-                    callbackContext.error(Utils.makeJSON(Constants.VERSION_RESOLVE_FAIL, "version resolve fail"));
+                    compareVersions();
+//                    callbackContext.error(Utils.makeJSON(Constants.VERSION_RESOLVE_FAIL, "version resolve fail"));
                     break;
                 case Constants.REMOTE_FILE_NOT_FOUND:
                     callbackContext.error(Utils.makeJSON(Constants.REMOTE_FILE_NOT_FOUND, "remote file not found"));
@@ -145,7 +146,11 @@ public class UpdateManager {
             } else {
                 LOG.d(TAG, "need update");
                 // 显示提示对话框
-                msgBox.showNoticeDialog(noticeDialogOnClick);
+                try {
+                    msgBox.showDialog(checkUpdateThread.versionInfo,version,noticeDialogOnClick);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 mHandler.sendEmptyMessage(Constants.VERSION_NEED_UPDATE);
             }
         } else {
@@ -159,7 +164,8 @@ public class UpdateManager {
         @Override
         public void onClick(DialogInterface dialog, int which) {
             dialog.dismiss();
-            mHandler.sendEmptyMessage(Constants.DOWNLOAD_CLICK_START);
+            if(which == MsgBox.UpdateButtonIndex)
+                mHandler.sendEmptyMessage(Constants.DOWNLOAD_CLICK_START);
         }
     };
 
@@ -225,7 +231,7 @@ public class UpdateManager {
         LOG.d(TAG, "downloadApk" + mProgress);
 
         // 启动新线程下载软件
-        downloadApkThread = new DownloadApkThread(mContext, mHandler, mProgress, mDownloadDialog, checkUpdateThread.getMHashMap());
+        downloadApkThread = new DownloadApkThread(mContext, mHandler, mProgress, mDownloadDialog, checkUpdateThread.versionInfo);
         this.cordova.getThreadPool().execute(downloadApkThread);
         // new Thread(downloadApkThread).start();
     }

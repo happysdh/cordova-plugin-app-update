@@ -3,14 +3,20 @@ package com.vaenow.appupdate.android;
 import android.content.Context;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Handler;
-import org.apache.cordova.LOG;
 
+import com.alibaba.fastjson.JSON;
+
+import org.apache.cordova.LOG;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -19,21 +25,23 @@ import java.util.List;
 public class CheckUpdateThread implements Runnable {
     private String TAG = "CheckUpdateThread";
 
-    /* 保存解析的XML信息 */
-    HashMap<String, String> mHashMap;
+//    /* 保存解析的XML信息 */
+//    HashMap<String, String> mHashMap;
+    /* 保存解析的JSON信息 */
+    public VersionInfo versionInfo;
     private Context mContext;
     private List<Version> queue;
     private String packageName;
     private String updateXmlUrl;
     private Handler mHandler;
 
-    private void setMHashMap(HashMap<String, String> mHashMap) {
-        this.mHashMap = mHashMap;
-    }
-
-    public HashMap<String, String> getMHashMap() {
-        return mHashMap;
-    }
+//    private void setMHashMap(HashMap<String, String> mHashMap) {
+//        this.mHashMap = mHashMap;
+//    }
+//
+//    public HashMap<String, String> getMHashMap() {
+//        return mHashMap;
+//    }
 
     public CheckUpdateThread(Context mContext, Handler mHandler, List<Version> queue, String packageName, String updateXmlUrl) {
         this.mContext = mContext;
@@ -47,9 +55,14 @@ public class CheckUpdateThread implements Runnable {
     public void run() {
         int versionCodeLocal = getVersionCodeLocal(mContext); // 获取当前软件版本
         int versionCodeRemote = getVersionCodeRemote();  //获取服务器当前软件版本
-
+        int versionCodeLowest = 0;
+        try {
+            versionCodeLowest = versionInfo.getIntLowestVersion();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         queue.clear(); //ensure the queue is empty
-        queue.add(new Version(versionCodeLocal, versionCodeRemote));
+        queue.add(new Version(versionCodeLocal, versionCodeRemote,versionCodeLowest));
 
         if (versionCodeLocal == 0 || versionCodeRemote == 0) {
             mHandler.sendEmptyMessage(Constants.VERSION_RESOLVE_FAIL);
@@ -122,19 +135,32 @@ public class CheckUpdateThread implements Runnable {
      */
     private int getVersionCodeRemote() {
         int versionCodeRemote = 0;
-
         InputStream is = returnFileIS(updateXmlUrl);
         // 解析XML文件。 由于XML文件比较小，因此使用DOM方式进行解析
-        ParseXmlService service = new ParseXmlService();
         try {
-            setMHashMap(service.parseXml(is));
-        } catch (Exception e) {
+            BufferedReader bR = new BufferedReader(  new InputStreamReader(is));
+            String line = "";
+            StringBuilder responseStrBuilder = new StringBuilder();
+            while((line =  bR.readLine()) != null){
+                responseStrBuilder.append(line);
+            }
+            JSONObject result= new JSONObject(responseStrBuilder.toString());
+            versionInfo = JSON.parseObject(result.toString(),VersionInfo.class);
+            versionCodeRemote = versionInfo.getIntCurrentVersion();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
             e.printStackTrace();
         }
-        if (null != getMHashMap()) {
-            versionCodeRemote = Integer.valueOf(getMHashMap().get("version"));
-        }
-
+//        ParseXmlService service = new ParseXmlService();
+//        try {
+//            setMHashMap(service.parseXml(is));
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        if (null != getMHashMap()) {
+//            versionCodeRemote = Integer.valueOf(getMHashMap().get("version"));
+//        }
         return versionCodeRemote;
     }
 }

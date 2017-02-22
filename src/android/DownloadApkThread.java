@@ -13,7 +13,6 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
 
 /**
  * 下载文件线程
@@ -21,8 +20,10 @@ import java.util.HashMap;
 public class DownloadApkThread implements Runnable {
     private String TAG = "DownloadApkThread";
 
-    /* 保存解析的XML信息 */
-    HashMap<String, String> mHashMap;
+//    /* 保存解析的XML信息 */
+//    HashMap<String, String> mHashMap;
+    /* 保存解析的JSON信息 */
+    public VersionInfo versionInfo;
     /* 下载保存路径 */
     private String mSavePath;
     /* 记录进度条数量 */
@@ -33,13 +34,13 @@ public class DownloadApkThread implements Runnable {
     private DownloadHandler downloadHandler;
     private Handler mHandler;
 
-    public DownloadApkThread(Context mContext, Handler mHandler, ProgressBar mProgress, AlertDialog mDownloadDialog, HashMap<String, String> mHashMap) {
+    public DownloadApkThread(Context mContext, Handler mHandler, ProgressBar mProgress, AlertDialog mDownloadDialog, VersionInfo versionInfo) {
         this.mDownloadDialog = mDownloadDialog;
-        this.mHashMap = mHashMap;
+        this.versionInfo = versionInfo;
         this.mHandler = mHandler;
 
         this.mSavePath = Environment.getExternalStorageDirectory() + "/" + "download"; // SD Path
-        this.downloadHandler = new DownloadHandler(mContext, mProgress, mDownloadDialog, this.mSavePath, mHashMap);
+        this.downloadHandler = new DownloadHandler(mContext, mProgress, mDownloadDialog, this.mSavePath, versionInfo);
     }
 
 
@@ -59,7 +60,7 @@ public class DownloadApkThread implements Runnable {
             // 判断SD卡是否存在，并且是否具有读写权限
             if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
                 // 获得存储卡的路径
-                URL url = new URL(mHashMap.get("url"));
+                URL url = new URL(versionInfo.getUrl());
                 // 创建连接
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.connect();
@@ -73,7 +74,7 @@ public class DownloadApkThread implements Runnable {
                 if (!file.exists()) {
                     file.mkdir();
                 }
-                File apkFile = new File(mSavePath, mHashMap.get("name"));
+                File apkFile = new File(mSavePath, versionInfo.getName());
                 FileOutputStream fos = new FileOutputStream(apkFile);
                 int count = 0;
                 // 缓存

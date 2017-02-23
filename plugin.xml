@@ -28,5 +28,6 @@
         <source-file src="res/values-en/appupdate_strings.xml" target-dir="res/values-en"/>
         <source-file src="res/values-zh/appupdate_strings.xml" target-dir="res/values-zh"/>
         <source-file src="res/layout/appupdate_progress.xml" target-dir="res/layout"/>
+        <framework src="com.alibaba:fastjson:1.2.24" />
     </platform>
 </plugin>
